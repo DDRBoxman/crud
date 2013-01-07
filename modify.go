@@ -98,12 +98,19 @@ func Insert(db DbIsh, table, sqlIdFieldName string, arg interface{}) (int64, err
 		placeholders = append(placeholders, fmt.Sprintf("$%d", len(placeholders) + 1))
 	}
 
-	q := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", table, strings.Join(sqlFields, ", "), strings.Join(placeholders, ", "))
+	q := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING %s", table, strings.Join(sqlFields, ", "), strings.Join(placeholders, ", "), sqlIdFieldName)
 
-	res, er := db.Exec(q, newValues...)
+	rows, er:= db.Query(q, newValues...)
 	if er != nil {
 		return 0, er
 	}
 
-	return res.LastInsertId()
+	if !rows.Next() {
+		return 0, er
+	}
+
+	var id int64
+	rows.Scan(&id)
+
+	return id, nil
 }
