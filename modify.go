@@ -26,7 +26,7 @@ func Update(db DbIsh, table, sqlIdFieldName string, arg interface{}) error {
 
 	sqlFields := make([]string, len(fieldMap))[:0]
 	newValues := make([]interface{}, len(fieldMap))[:0]
-	placeholderId := 0
+	placeholderId := 1
 	var id int64 = 0
 
 	for sqlName, meta := range fieldMap {
@@ -59,6 +59,7 @@ func Update(db DbIsh, table, sqlIdFieldName string, arg interface{}) error {
 
 	q := fmt.Sprintf("UPDATE %s SET %s WHERE %s = $%d", table, strings.Join(sqlFields, ", "), sqlIdFieldName, placeholderId)
 	_, er = db.Exec(q, newValues...)
+	
 	return er
 }
 
