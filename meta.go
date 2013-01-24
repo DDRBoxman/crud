@@ -6,11 +6,10 @@ import (
 	"strings"
 )
 
-
 type fieldMeta struct {
-	GoName string
+	GoName  string
 	SqlName string
-	Unix bool
+	Unix    bool
 }
 
 /* 
@@ -29,7 +28,7 @@ func sqlToGoFields(ty reflect.Type) (map[string]fieldMeta, error) {
 
 	fieldMap := make(map[string]fieldMeta)
 
-	for i := 0 ; i < ty.NumField() ; i += 1 {
+	for i := 0; i < ty.NumField(); i += 1 {
 		field := ty.Field(i)
 
 		tag := field.Tag.Get("crud")
@@ -39,7 +38,7 @@ func sqlToGoFields(ty reflect.Type) (map[string]fieldMeta, error) {
 
 			meta := fieldMeta{
 				SqlName: tagPieces[0],
-				GoName: field.Name,
+				GoName:  field.Name,
 			}
 
 			for idx := 1; idx < len(tagPieces); idx += 1 {

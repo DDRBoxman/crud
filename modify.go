@@ -2,14 +2,14 @@ package crud
 
 import (
 	"fmt"
-	"time"
 	"reflect"
 	"strings"
+	"time"
 )
 
 /* 
 Update syncs a tagged object with an existing record in the database.
- 
+
 The metadata contained in the crud tags don't include the table name or
 the name of the SQL primary ID, so they have to be passed in manually.
 If the object passed in as arg does not have a primary key set (or the
@@ -38,10 +38,10 @@ func Update(db DbIsh, table, sqlIdFieldName string, arg interface{}) error {
 		} else {
 			fieldVal := val.FieldByName(goName).Interface()
 
-			if timeVal, ok := fieldVal.(time.Time) ; ok && meta.Unix {
+			if timeVal, ok := fieldVal.(time.Time); ok && meta.Unix {
 				fieldVal = timeVal.Unix()
 
-			} else if timeVal, ok := fieldVal.(*time.Time) ; ok && meta.Unix && timeVal != nil {
+			} else if timeVal, ok := fieldVal.(*time.Time); ok && meta.Unix && timeVal != nil {
 				fieldVal = timeVal.Unix()
 			}
 
@@ -59,7 +59,7 @@ func Update(db DbIsh, table, sqlIdFieldName string, arg interface{}) error {
 
 	q := fmt.Sprintf("UPDATE %s SET %s WHERE %s = $%d", table, strings.Join(sqlFields, ", "), sqlIdFieldName, placeholderId)
 	_, er = db.Exec(q, newValues...)
-	
+
 	return er
 }
 
@@ -87,31 +87,36 @@ func Insert(db DbIsh, table, sqlIdFieldName string, arg interface{}) (int64, err
 		goName := meta.GoName
 		fieldVal := val.FieldByName(goName).Interface()
 
-		if timeVal, ok := fieldVal.(time.Time) ; ok && meta.Unix {
+		if timeVal, ok := fieldVal.(time.Time); ok && meta.Unix {
 			fieldVal = timeVal.Unix()
 
-		} else if timeVal, ok := fieldVal.(*time.Time) ; ok && meta.Unix && timeVal != nil {
+		} else if timeVal, ok := fieldVal.(*time.Time); ok && meta.Unix && timeVal != nil {
 			fieldVal = timeVal.Unix()
 		}
 
 		sqlFields = append(sqlFields, sqlName)
 		newValues = append(newValues, fieldVal)
-		placeholders = append(placeholders, fmt.Sprintf("$%d", len(placeholders) + 1))
+		placeholders = append(placeholders, fmt.Sprintf("$%d", len(placeholders)+1))
 	}
 
-	q := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING %s", table, strings.Join(sqlFields, ", "), strings.Join(placeholders, ", "), sqlIdFieldName)
+	returning := ""
+	if sqlIdFieldName != "" {
+		returning = "RETURNING " + sqlIdFieldName
+	}
 
-	rows, er:= db.Query(q, newValues...)
+	q := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) %s", table, strings.Join(sqlFields, ", "), strings.Join(placeholders, ", "), returning)
+
+	rows, er := db.Query(q, newValues...)
 	if er != nil {
 		return 0, er
 	}
+	defer rows.Close()
 
 	if !rows.Next() {
-		return 0, er
+		return 0, rows.Err()
 	}
 
 	var id int64
-	rows.Scan(&id)
 
-	return id, nil
+	return id, rows.Scan(&id)
 }
