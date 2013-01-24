@@ -1,10 +1,10 @@
 package crud
 
 import (
-	"fmt"
-	"time"
-	"reflect"
 	"database/sql"
+	"fmt"
+	"reflect"
+	"time"
 )
 
 /*
@@ -113,7 +113,7 @@ func Scan(rows *sql.Rows, args ...interface{}) error {
 	writeBack := make([]interface{}, len(cols))
 
 	for i, col := range cols {
-		if target, ok := writeBackMap[col] ; ok {
+		if target, ok := writeBackMap[col]; ok {
 			writeBack[i] = target
 
 		} else {
@@ -121,7 +121,7 @@ func Scan(rows *sql.Rows, args ...interface{}) error {
 		}
 	}
 
-	if er := rows.Scan(writeBack...) ; er != nil {
+	if er := rows.Scan(writeBack...); er != nil {
 		fmt.Printf("Error encountered, columns: %#v\n", cols)
 		return er
 	}
@@ -236,7 +236,7 @@ func ScanAll(rows *sql.Rows, slicePtr interface{}) error {
 	for rows.Next() {
 		newVal := reflect.New(elemType)
 
-		if er := Scan(rows, newVal.Interface()) ; er != nil {
+		if er := Scan(rows, newVal.Interface()); er != nil {
 			return er
 		}
 
@@ -245,4 +245,3 @@ func ScanAll(rows *sql.Rows, slicePtr interface{}) error {
 
 	return nil
 }
-
