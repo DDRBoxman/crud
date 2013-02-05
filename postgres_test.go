@@ -83,7 +83,7 @@ func createDb() (*sql.DB, error) {
 			, o_int32 INTEGER
 			, o_int64 INTEGER
 			, o_float32 REAL
-			, o_float64 REAL
+			, o_float64 DOUBLE PRECISION
 			, o_bool BOOL
 			, o_string VARCHAR(255)
 			);
