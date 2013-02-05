@@ -42,12 +42,7 @@ func newFoo() Foo {
 }
 
 func openTestConn() (*sql.DB, error) {
-	datname := os.Getenv("PGDATABASE")
 	sslmode := os.Getenv("PGSSLMODE")
-
-	if datname == "" {
-		os.Setenv("PGDATABASE", "pqgotest")
-	}
 
 	if sslmode == "" {
 		os.Setenv("PGSSLMODE", "disable")
