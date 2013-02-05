@@ -2,7 +2,8 @@ package crud
 
 import (
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/bmizerany/pq"
+	"os"
 	"testing"
 	"time"
 )
@@ -40,15 +41,30 @@ func newFoo() Foo {
 	}
 }
 
+func openTestConn() (*sql.DB, error) {
+	datname := os.Getenv("PGDATABASE")
+	sslmode := os.Getenv("PGSSLMODE")
+
+	if datname == "" {
+		os.Setenv("PGDATABASE", "pqgotest")
+	}
+
+	if sslmode == "" {
+		os.Setenv("PGSSLMODE", "disable")
+	}
+
+	return sql.Open("postgres", "")
+}
+
 func createDb() (*sql.DB, error) {
-	db, er := sql.Open("sqlite3", ":memory:")
+	db, er := openTestConn()
 	if er != nil {
 		return nil, er
 	}
 
 	_, er = db.Exec(`
 		CREATE TABLE foo
-			( foo_id INTEGER PRIMARY KEY AUTOINCREMENT
+			( foo_id BIGSERIAL PRIMARY KEY
 			, foo_num INTEGER NOT NULL
 			, foo_str VARCHAR(34) NOT NULL
 			, foo_time TIMESTAMP NOT NULL
@@ -95,12 +111,19 @@ func createDb() (*sql.DB, error) {
 	return db, nil
 }
 
+func destroyDb(db *sql.DB) {
+	_, _ = db.Exec(`DROP TABLE foo CASCADE`)
+	_, _ = db.Exec(`DROP TABLE ofoo CASCADE`)
+	_, _ = db.Exec(`DROP TABLE tfoo CASCADE`)
+}
+
 func TestSingleFoo(t *testing.T) {
 	db, er := createDb()
 	if er != nil {
 		t.Fatal(er)
 	}
 	defer db.Close()
+	defer destroyDb(db)
 
 	f := newFoo()
 
@@ -164,6 +187,7 @@ func TestModifyFoo(t *testing.T) {
 		t.Fatal(er)
 	}
 	defer db.Close()
+	defer destroyDb(db)
 
 	f := newFoo()
 
@@ -208,6 +232,7 @@ func TestModifyFooByPtr(t *testing.T) {
 		t.Fatal(er)
 	}
 	defer db.Close()
+	defer destroyDb(db)
 
 	f := newFoo()
 
@@ -252,6 +277,7 @@ func TestMultipleFoo(t *testing.T) {
 		t.Fatal(er)
 	}
 	defer db.Close()
+	defer destroyDb(db)
 
 	f1 := Foo{
 		Num: 3,
@@ -332,6 +358,7 @@ func TestOptionalFoo(t *testing.T) {
 		t.Fatal(er)
 	}
 	defer db.Close()
+	defer destroyDb(db)
 
 	var Int8 int8 = 8
 	var Int16 int16 = 16
@@ -436,6 +463,7 @@ func TestNullOptionalFoo(t *testing.T) {
 		t.Fatal(er)
 	}
 	defer db.Close()
+	defer destroyDb(db)
 
 	f1 := OptionalFoo{}
 
@@ -497,6 +525,7 @@ func TestTimeMarshalling(t *testing.T) {
 	if er != nil {
 		t.Fatal(er)
 	}
+	defer destroyDb(db)
 
 	/* Ugh, convert to Unix for granularity reasons; strip off TZ data
 	 * because SQLite doesn't understand them and they affect both .Equal 

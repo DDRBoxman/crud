@@ -10,6 +10,7 @@ func ExampleInsert() {
 		return
 	}
 	defer db.Close()
+	defer destroyDb(db)
 
 	/* Foo is defined elsewhere and has appropriately-tagged fields */
 	f := Foo{
@@ -32,6 +33,7 @@ func ExampleUpdate() {
 		return
 	}
 	defer db.Close()
+	defer destroyDb(db)
 
 	/* f is a Foo instance obtained from somewhere and modified */
 	f := Foo{
@@ -51,6 +53,7 @@ func ExampleScan() {
 		return
 	}
 	defer db.Close()
+	defer destroyDb(db)
 
 	rows, er := db.Query("SELECT * FROM foo")
 	if er != nil {
