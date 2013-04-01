@@ -37,7 +37,9 @@ func sqlToGoFields(ty reflect.Type) (map[string]fieldMeta, error) {
 			tagPieces := strings.Split(tag, ",")
 
 			meta := fieldMeta{
-				SqlName: tagPieces[0],
+				/* postgres returns all-lowercase field names; so ToLower these
+				 * so we actually know what they refer to */
+				SqlName: strings.ToLower(tagPieces[0]),
 				GoName:  field.Name,
 			}
 
